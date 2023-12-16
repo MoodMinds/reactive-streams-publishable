@@ -1,6 +1,6 @@
 # Contribution Guidelines
 
-Thank you for your interest in contributing to Reactive Streams Publishable!
+Thank you for your interest in contributing to **Reactive Streams Publishable**!
 
 **Project Status: Experimental and Under Development**
 
