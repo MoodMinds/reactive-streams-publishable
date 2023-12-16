@@ -266,9 +266,9 @@ public interface Publishable<V, E extends Exception> extends SubscribeSupport<V,
             @Override public Context currentContext() { return context; }
             @Override public void onSubscribe(org.reactivestreams.Subscription s) { subscriber.onSubscribe(s); }
             @Override public void onNext(V v) { subscriber.onNext(v); }
-            @Override public void onFail(E e) { subscriber.onFail(e); }
+            @Override public void onError(E error) { subscriber.onError(error); }
             @Override @SuppressWarnings("unchecked") public void onError(Throwable error) {
-                try { subscriber.onFail((E) error); }
+                try { subscriber.onError((E) error); }
                 catch (ClassCastException e) { subscriber.onError(error); } }
             @Override public void onComplete() { subscriber.onComplete(); }
         };
@@ -294,7 +294,7 @@ public interface Publishable<V, E extends Exception> extends SubscribeSupport<V,
             @Override public Context currentContext() { return context; }
             @Override public void onSubscribe(org.reactivestreams.Subscription s) { subscriber.onSubscribe(s); }
             @Override public void onNext(V v) { subscriber.onNext(v); }
-            @Override public void onFail(E e) { subscriber.onError(e); }
+            @Override public void onError(E error) { subscriber.onError(error); }
             @Override public void onError(Throwable t) { subscriber.onError(t); }
             @Override public void onComplete() { subscriber.onComplete(); }
         };
@@ -313,7 +313,7 @@ public interface Publishable<V, E extends Exception> extends SubscribeSupport<V,
         requireNonNull(subscriber); return new Subscriber<V, E>() {
             @Override public Context currentContext() { return subscriber.currentContext(); }
             @Override public void onSubscribe(Subscription s) { subscriber.onSubscribe(s); }
-            @Override public void onFail(E exception) { subscriber.onError(exception); }
+            @Override public void onError(E error) { subscriber.onError(error); }
             @Override public void onError(Throwable error) { subscriber.onError(error); }
             @Override public void onNext(V v) { subscriber.onNext(v); }
             @Override public void onComplete() { subscriber.onComplete(); }
@@ -347,7 +347,7 @@ public interface Publishable<V, E extends Exception> extends SubscribeSupport<V,
             @Override public Context currentContext() { return context; }
             @Override public void onSubscribe(Subscription subscription) { subscription.request(Long.MAX_VALUE); }
             @Override public void onNext(V item) { itemConsumer.exec(item); }
-            @Override public void onFail(E fault) { faultConsumer.exec(fault); }
+            @Override public void onError(E error) { faultConsumer.exec(error); }
             @Override @SuppressWarnings("unchecked") public void onError(Throwable error) {
                 try { faultConsumer.exec((E) error); }
                 catch (ClassCastException e) { errorConsumer.exec(error); } }
