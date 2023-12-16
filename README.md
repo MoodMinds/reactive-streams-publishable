@@ -1,6 +1,6 @@
-# [Reactor](https://projectreactor.io) implementation of the [Reactive Streams](https://github.com/MoodMinds/reactive-streams)
+# [Project Reactor](https://projectreactor.io) implementation of the [Reactive Streams](https://github.com/MoodMinds/reactive-streams)
 
-Wrappers around the [Reactor](https://projectreactor.io)'s `Flux` and `Mono` adapting to the `Publishable` (`FluxPublishable` and `MonoPublishable`)
+Wrappers around the [Project Reactor](https://projectreactor.io)'s `Flux` and `Mono` adapting to the `Publishable` (`FluxPublishable` and `MonoPublishable`)
 extension of [Reactive Streams](https://github.com/MoodMinds/reactive-streams)' `SubscribeSupport`.
 
 ## Usage example
