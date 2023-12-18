@@ -3,6 +3,7 @@ package org.moodminds.reactive.context;
 import org.moodminds.elemental.AbstractAssociation.AbstractImmutableAssociation;
 import org.moodminds.elemental.Association;
 import org.moodminds.elemental.KeyValue;
+import org.moodminds.elemental.RandomMatch;
 import org.moodminds.elemental.WrapMap.WrapEntry;
 import reactor.util.context.Context;
 
@@ -15,7 +16,8 @@ import static java.util.Objects.requireNonNull;
 /**
  * A wrapping {@link Context} implementation of the {@link Association} context.
  */
-public class WrapContext extends AbstractImmutableAssociation<Object, Object> implements Serializable {
+public class WrapContext extends AbstractImmutableAssociation<Object, Object>
+        implements RandomMatch, Serializable {
 
     private static final long serialVersionUID = -7953131836841982418L;
 
