@@ -8,7 +8,6 @@ import org.moodminds.elemental.KeyValue;
 import org.moodminds.elemental.RandomMatch;
 import org.moodminds.elemental.SingleIterator;
 import org.moodminds.elemental.WrapKeyValue;
-import org.moodminds.elemental.WrapSpliterator;
 import reactor.util.context.Context;
 
 import java.io.Serializable;
@@ -18,8 +17,6 @@ import java.util.NoSuchElementException;
 import java.util.Spliterator;
 
 import static java.util.Objects.requireNonNull;
-import static java.util.Spliterator.DISTINCT;
-import static java.util.Spliterator.IMMUTABLE;
 import static org.moodminds.elemental.Pair.pair;
 
 /**
@@ -89,7 +86,7 @@ public class WrapContext extends AbstractAssociation<Object, Object, KeyValue<Ob
      */
     @Override
     public Container<Object> keys() {
-        return new WrapKeysContainer();
+        return new KeysContainer();
     }
 
     /**
@@ -99,7 +96,7 @@ public class WrapContext extends AbstractAssociation<Object, Object, KeyValue<Ob
      */
     @Override
     public Container<Object> values() {
-        return new WrapValuesContainer();
+        return new ValuesContainer();
     }
 
     /**
@@ -137,24 +134,20 @@ public class WrapContext extends AbstractAssociation<Object, Object, KeyValue<Ob
 
 
     /**
-     * Wrap Context keys Container.
+     * Wrap Context keys Container implementation.
      */
-    protected class WrapKeysContainer extends AbstractKeysContainer implements RandomMatch {
+    protected class KeysContainer extends AbstractKeysContainer implements RandomMatch {
 
         @Override public Spliterator<Object> spliterator() {
-            return WrapSpliterator.wrap(WrapContext.this.context.stream()
-                            .map(Entry::getKey).spliterator(),
-                    ch -> ch | IMMUTABLE | DISTINCT); }
+            return WrapContext.this.context.stream().parallel().map(Entry::getKey).spliterator(); }
     }
 
     /**
-     * Wrap Context values Container.
+     * Wrap Context values Container implementation.
      */
-    protected class WrapValuesContainer extends AbstractValuesContainer {
+    protected class ValuesContainer extends AbstractValuesContainer {
 
         @Override public Spliterator<Object> spliterator() {
-            return WrapSpliterator.wrap(WrapContext.this.context.stream()
-                            .map(Entry::getValue).spliterator(),
-                    ch -> ch | IMMUTABLE); }
+            return WrapContext.this.context.stream().parallel().map(Entry::getValue).spliterator(); }
     }
 }

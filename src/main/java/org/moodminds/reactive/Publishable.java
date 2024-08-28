@@ -66,7 +66,7 @@ public interface Publishable<V, E extends Exception> extends SubscribeSupport<V,
      * @throws NullPointerException {@inheritDoc}
      */
     @Override
-    default void subscribe(org.reactivestreams.Subscriber<? super V> subscriber, Association<Object, Object, ?> ctx) {
+    default void subscribe(org.reactivestreams.Subscriber<? super V> subscriber, Association<?, ?, ?> ctx) {
         subscribe((CoreSubscriber<? super V>) subscriber(subscriber, ctx.stream()));
     }
 
@@ -78,7 +78,7 @@ public interface Publishable<V, E extends Exception> extends SubscribeSupport<V,
      * @throws NullPointerException {@inheritDoc}
      */
     @Override
-    default void subscribe(SubscribeSupport.Subscriber<? super V, ? super E> subscriber, Association<Object, Object, ?> ctx) {
+    default void subscribe(SubscribeSupport.Subscriber<? super V, ? super E> subscriber, Association<?, ?, ?> ctx) {
         subscribe((CoreSubscriber<? super V>) subscriber(subscriber, ctx.stream()));
     }
 
@@ -100,7 +100,7 @@ public interface Publishable<V, E extends Exception> extends SubscribeSupport<V,
      * @param ctx          the given {@link Association context}
      * @throws NullPointerException if any of the specified events consumers or {@link Association context} is {@code null}
      */
-    default void subscribe(Executable1Throwing1<? super V, ? extends RuntimeException> itemConsumer, Association<Object, Object, ?> ctx) {
+    default void subscribe(Executable1Throwing1<? super V, ? extends RuntimeException> itemConsumer, Association<?, ?, ?> ctx) {
         subscribe(itemConsumer, idle(), idle(), ExecutableThrowing1.idle(), ctx);
     }
 
@@ -128,7 +128,7 @@ public interface Publishable<V, E extends Exception> extends SubscribeSupport<V,
      */
     default void subscribe(Executable1Throwing1<? super V, ? extends RuntimeException> itemConsumer,
                            Executable1Throwing1<? super Throwable, ? extends RuntimeException> errorConsumer,
-                           Association<Object, Object, ?> ctx) {
+                           Association<?, ?, ?> ctx) {
         subscribe(itemConsumer, idle(), errorConsumer, ExecutableThrowing1.idle(), ctx);
     }
 
@@ -160,7 +160,7 @@ public interface Publishable<V, E extends Exception> extends SubscribeSupport<V,
     default void subscribe(Executable1Throwing1<? super V, ? extends RuntimeException> itemConsumer,
                            Executable1Throwing1<? super E, ? extends RuntimeException> faultConsumer,
                            Executable1Throwing1<? super Throwable, ? extends RuntimeException> errorConsumer,
-                           Association<Object, Object, ?> ctx) {
+                           Association<?, ?, ?> ctx) {
         subscribe(itemConsumer, faultConsumer, errorConsumer, ExecutableThrowing1.idle(), ctx);
     }
 
@@ -192,7 +192,7 @@ public interface Publishable<V, E extends Exception> extends SubscribeSupport<V,
     default void subscribe(Executable1Throwing1<? super V, ? extends RuntimeException> itemConsumer,
                            Executable1Throwing1<? super Throwable, ? extends RuntimeException> errorConsumer,
                            ExecutableThrowing1<? extends RuntimeException> completeConsumer,
-                           Association<Object, Object, ?> ctx) {
+                           Association<?, ?, ?> ctx) {
         subscribe(itemConsumer, idle(), errorConsumer, completeConsumer, ctx);
     }
 
@@ -230,7 +230,7 @@ public interface Publishable<V, E extends Exception> extends SubscribeSupport<V,
                            Executable1Throwing1<? super E, ? extends RuntimeException> faultConsumer,
                            Executable1Throwing1<? super Throwable, ? extends RuntimeException> errorConsumer,
                            ExecutableThrowing1<? extends RuntimeException> completeConsumer,
-                           Association<Object, Object, ?> ctx) {
+                           Association<?, ?, ?> ctx) {
         requireNonNull(itemConsumer); requireNonNull(errorConsumer);
         requireNonNull(faultConsumer); requireNonNull(completeConsumer);
         subscribe((CoreSubscriber<? super V>) subscriber(itemConsumer, faultConsumer, errorConsumer, completeConsumer, ctx.stream()));
