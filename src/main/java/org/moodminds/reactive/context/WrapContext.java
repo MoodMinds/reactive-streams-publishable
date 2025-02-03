@@ -3,10 +3,9 @@ package org.moodminds.reactive.context;
 import org.moodminds.elemental.AbstractAssociation;
 import org.moodminds.elemental.Association;
 import org.moodminds.elemental.Container;
-import org.moodminds.elemental.EmptyIterator;
 import org.moodminds.elemental.KeyValue;
+import org.moodminds.elemental.OptionalIterator;
 import org.moodminds.elemental.RandomMatch;
-import org.moodminds.elemental.SingleIterator;
 import org.moodminds.elemental.WrapKeyValue;
 import reactor.util.context.Context;
 
@@ -54,16 +53,6 @@ public class WrapContext extends AbstractAssociation<Object, Object, KeyValue<Ob
     @Override
     public <R> R get(Object key) {
         return context.get(key);
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @return {@inheritDoc}
-     */
-    @Override
-    public boolean contains() {
-        return !context.isEmpty();
     }
 
     /**
@@ -124,12 +113,12 @@ public class WrapContext extends AbstractAssociation<Object, Object, KeyValue<Ob
      *
      * @param key {@inheritDoc}
      * @param value {@inheritDoc}
-     * @param hasEntry {@inheritDoc}
+     * @param present {@inheritDoc}
      * @return {@inheritDoc}
      */
     @Override
-    protected Iterator<KeyValue<Object, Object>> iterator(Object key, Object value, boolean hasEntry) {
-        return hasEntry ? SingleIterator.iterator(pair(key, value)) : EmptyIterator.iterator();
+    protected Iterator<KeyValue<Object, Object>> iterator(Object key, Object value, boolean present) {
+        return OptionalIterator.iterator(pair(key, value), present);
     }
 
 
