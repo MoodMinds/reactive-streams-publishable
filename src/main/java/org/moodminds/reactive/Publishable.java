@@ -33,7 +33,9 @@ public interface Publishable<V, E extends Exception> extends SubscribeSupport<V,
      */
     @Override
     default void subscribe(org.reactivestreams.Subscriber<? super V> subscriber) {
-        subscribe(subscriber, new KeyValue<?, ?>[] {});
+        if (subscriber instanceof CoreSubscriber)
+            subscribe((CoreSubscriber<? super V>) subscriber);
+        else subscribe(subscriber, new KeyValue<?, ?>[]{});
     }
 
     /**
