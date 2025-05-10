@@ -1,6 +1,7 @@
 package org.moodminds.reactive;
 
 import org.moodminds.elemental.Association;
+import org.moodminds.elemental.Container;
 import org.moodminds.elemental.KeyValue;
 import org.moodminds.reactive.context.WrapContext;
 import org.moodminds.function.Executable1Throwing1;
@@ -10,10 +11,11 @@ import reactor.core.CorePublisher;
 import reactor.core.CoreSubscriber;
 import reactor.util.context.Context;
 
-import java.util.stream.Stream;
-
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toMap;
+import static org.moodminds.elemental.ArraySequence.sequence;
 import static org.moodminds.function.Executable1Throwing1.idle;
+import static reactor.util.context.Context.of;
 
 /**
  * An extension of the {@link SubscribeSupport} interface, this class is a specialized {@link CorePublisher}
@@ -43,7 +45,7 @@ public interface Publishable<V, E extends Exception> extends SubscribeSupport<V,
      */
     @Override
     default void subscribe(org.reactivestreams.Subscriber<? super V> subscriber, KeyValue<?, ?>... ctx) {
-        subscribe((CoreSubscriber<? super V>) subscriber(subscriber, Stream.of(ctx)));
+        subscribe((CoreSubscriber<? super V>) subscriber(subscriber, sequence(ctx)));
     }
 
     /**
@@ -55,7 +57,7 @@ public interface Publishable<V, E extends Exception> extends SubscribeSupport<V,
      */
     @Override
     default void subscribe(SubscribeSupport.Subscriber<? super V, ? super E> subscriber, KeyValue<?, ?>... ctx) {
-        subscribe((CoreSubscriber<? super V>) subscriber(subscriber, Stream.of(ctx)));
+        subscribe((CoreSubscriber<? super V>) subscriber(subscriber, sequence(ctx)));
     }
 
     /**
@@ -67,7 +69,7 @@ public interface Publishable<V, E extends Exception> extends SubscribeSupport<V,
      */
     @Override
     default void subscribe(org.reactivestreams.Subscriber<? super V> subscriber, Association<?, ?, ?> ctx) {
-        subscribe((CoreSubscriber<? super V>) subscriber(subscriber, ctx.stream()));
+        subscribe((CoreSubscriber<? super V>) subscriber(subscriber, ctx));
     }
 
     /**
@@ -79,7 +81,7 @@ public interface Publishable<V, E extends Exception> extends SubscribeSupport<V,
      */
     @Override
     default void subscribe(SubscribeSupport.Subscriber<? super V, ? super E> subscriber, Association<?, ?, ?> ctx) {
-        subscribe((CoreSubscriber<? super V>) subscriber(subscriber, ctx.stream()));
+        subscribe((CoreSubscriber<? super V>) subscriber(subscriber, ctx));
     }
 
     /**
@@ -213,7 +215,7 @@ public interface Publishable<V, E extends Exception> extends SubscribeSupport<V,
                            KeyValue<?, ?>... ctx) {
         requireNonNull(itemConsumer); requireNonNull(errorConsumer);
         requireNonNull(faultConsumer); requireNonNull(completeConsumer);
-        subscribe((CoreSubscriber<? super V>) subscriber(itemConsumer, faultConsumer, errorConsumer, completeConsumer, Stream.of(ctx)));
+        subscribe((CoreSubscriber<? super V>) subscriber(itemConsumer, faultConsumer, errorConsumer, completeConsumer, sequence(ctx)));
     }
 
     /**
@@ -233,7 +235,7 @@ public interface Publishable<V, E extends Exception> extends SubscribeSupport<V,
                            Association<?, ?, ?> ctx) {
         requireNonNull(itemConsumer); requireNonNull(errorConsumer);
         requireNonNull(faultConsumer); requireNonNull(completeConsumer);
-        subscribe((CoreSubscriber<? super V>) subscriber(itemConsumer, faultConsumer, errorConsumer, completeConsumer, ctx.stream()));
+        subscribe((CoreSubscriber<? super V>) subscriber(itemConsumer, faultConsumer, errorConsumer, completeConsumer, ctx));
     }
 
 
@@ -248,22 +250,20 @@ public interface Publishable<V, E extends Exception> extends SubscribeSupport<V,
 
     /**
      * Return a Subscriber by the given {@link SubscribeSupport.Subscriber}
-     * and {@link Stream} of {@link KeyValue key-values} context.
+     * and {@link Container} of {@link KeyValue key-values} context.
      *
      * @param subscriber the given {@link SubscribeSupport.Subscriber}
-     * @param ctx        the given {@link Stream} of {@link KeyValue key-values} context
+     * @param ctx        the given {@link Container} of {@link KeyValue key-values} context
      * @param <V>        the type of items to consume
      * @param <E>        the type of exceptions to consume
      * @return a Subscriber by the given {@link SubscribeSupport.Subscriber}
-     * and {@link Stream} of {@link KeyValue key-values} context
+     * and {@link Container} of {@link KeyValue key-values} context
      * @throws NullPointerException is the specified {@link SubscribeSupport.Subscriber}
-     *                              or the {@link Stream} context is {@code null}
+     *                              or the {@link Container} context is {@code null}
      */
-    static <V, E extends Exception> Subscriber<V, E> subscriber(SubscribeSupport.Subscriber<? super V, ? super E> subscriber, Stream<? extends KeyValue<?, ?>> ctx) {
-        requireNonNull(subscriber); Context context = ctx.collect(Context::empty, (c, kv) ->
-                c.put(kv.getKey(), kv.getValue()), (c1, c2) -> c1.putAll(c2.readOnly()));
+    static <V, E extends Exception> Subscriber<V, E> subscriber(SubscribeSupport.Subscriber<? super V, ? super E> subscriber, Container<? extends KeyValue<?, ?>> ctx) {
+        requireNonNull(subscriber); Context context = of(ctx.stream().collect(toMap(KeyValue::getKey, KeyValue::getValue)));
         return new Subscriber<V, E>() {
-            @Override public Context currentContext() { return context; }
             @Override public void onSubscribe(org.reactivestreams.Subscription s) { subscriber.onSubscribe(s); }
             @Override public void onNext(V v) { subscriber.onNext(v); }
             @Override public void onError(E error) { subscriber.onError(error); }
@@ -271,32 +271,32 @@ public interface Publishable<V, E extends Exception> extends SubscribeSupport<V,
                 try { subscriber.onError((E) error); }
                 catch (ClassCastException e) { subscriber.onError(error); } }
             @Override public void onComplete() { subscriber.onComplete(); }
+            @Override public Context currentContext() { return context; }
         };
     }
 
     /**
      * Return a Subscriber by the given {@link org.reactivestreams.Subscriber}
-     * and {@link Stream} of {@link KeyValue key-values} context.
+     * and {@link Container} of {@link KeyValue key-values} context.
      *
      * @param subscriber the given {@link org.reactivestreams.Subscriber}
-     * @param ctx        the given {@link Stream} of {@link KeyValue key-values} context
+     * @param ctx        the given {@link Container} of {@link KeyValue key-values} context
      * @param <V>        the type of items to consume
      * @param <E>        the type of exceptions to consume
      * @return a Subscriber by the given {@link org.reactivestreams.Subscriber}
-     * and {@link Stream} of {@link KeyValue key-values} context
+     * and {@link Container} of {@link KeyValue key-values} context
      * @throws NullPointerException is the specified {@link org.reactivestreams.Subscriber}
-     *                              or the {@link Stream} context is {@code null}
+     *                              or the {@link Container} context is {@code null}
      */
-    static <V, E extends Exception> Subscriber<V, E> subscriber(org.reactivestreams.Subscriber<? super V> subscriber, Stream<? extends KeyValue<?, ?>> ctx) {
-        requireNonNull(subscriber); Context context = ctx.collect(Context::empty, (c, kv) ->
-                c.put(kv.getKey(), kv.getValue()), (c1, c2) -> c1.putAll(c2.readOnly()));
+    static <V, E extends Exception> Subscriber<V, E> subscriber(org.reactivestreams.Subscriber<? super V> subscriber, Container<? extends KeyValue<?, ?>> ctx) {
+        requireNonNull(subscriber); Context context = of(ctx.stream().collect(toMap(KeyValue::getKey, KeyValue::getValue)));
         return new Subscriber<V, E>() {
-            @Override public Context currentContext() { return context; }
             @Override public void onSubscribe(org.reactivestreams.Subscription s) { subscriber.onSubscribe(s); }
             @Override public void onNext(V v) { subscriber.onNext(v); }
             @Override public void onError(E error) { subscriber.onError(error); }
             @Override public void onError(Throwable t) { subscriber.onError(t); }
             @Override public void onComplete() { subscriber.onComplete(); }
+            @Override public Context currentContext() { return context; }
         };
     }
 
@@ -311,40 +311,38 @@ public interface Publishable<V, E extends Exception> extends SubscribeSupport<V,
      */
     static <V, E extends Exception> Subscriber<V, E> subscriber(CoreSubscriber<V> subscriber) {
         requireNonNull(subscriber); return new Subscriber<V, E>() {
-            @Override public Context currentContext() { return subscriber.currentContext(); }
             @Override public void onSubscribe(Subscription s) { subscriber.onSubscribe(s); }
+            @Override public void onNext(V v) { subscriber.onNext(v); }
             @Override public void onError(E error) { subscriber.onError(error); }
             @Override public void onError(Throwable error) { subscriber.onError(error); }
-            @Override public void onNext(V v) { subscriber.onNext(v); }
             @Override public void onComplete() { subscriber.onComplete(); }
+            @Override public Context currentContext() { return subscriber.currentContext(); }
         };
     }
 
     /**
-     * Return a Subscriber by the given events consumers and {@link Stream}
+     * Return a Subscriber by the given events consumers and {@link Container}
      * of {@link KeyValue key-values} context.
      *
      * @param itemConsumer     the given item consumer
      * @param faultConsumer    the given {@link Exception} consumer
      * @param errorConsumer    the given {@link Throwable} consumer
      * @param completeConsumer the given completion event executor
-     * @param ctx              the given {@link Stream} of {@link KeyValue key-value} context
+     * @param ctx              the given {@link Container} of {@link KeyValue key-value} context
      * @param <V>              the type of items to consume
      * @param <E>              the type of exceptions to consume
-     * @return a Subscriber by the given events consumers and {@link Stream} of {@link KeyValue key-values} context
+     * @return a Subscriber by the given events consumers and {@link Container} of {@link KeyValue key-values} context
      * @throws NullPointerException is any of the specified events consumers is {@code null}
      */
     static <V, E extends Exception> Subscriber<V, E> subscriber(Executable1Throwing1<? super V, ? extends RuntimeException> itemConsumer,
                                                                 Executable1Throwing1<? super E, ? extends RuntimeException> faultConsumer,
                                                                 Executable1Throwing1<? super Throwable, ? extends RuntimeException> errorConsumer,
                                                                 ExecutableThrowing1<? extends RuntimeException> completeConsumer,
-                                                                Stream<? extends KeyValue<?, ?>> ctx) {
+                                                                Container<? extends KeyValue<?, ?>> ctx) {
         requireNonNull(itemConsumer); requireNonNull(errorConsumer);
         requireNonNull(faultConsumer); requireNonNull(completeConsumer);
-        Context context = ctx.collect(Context::empty, (c, kv) ->
-                c.put(kv.getKey(), kv.getValue()), (c1, c2) -> c1.putAll(c2.readOnly()));
+        Context context = of(ctx.stream().collect(toMap(KeyValue::getKey, KeyValue::getValue)));
         return new Subscriber<V, E>() {
-            @Override public Context currentContext() { return context; }
             @Override public void onSubscribe(Subscription subscription) { subscription.request(Long.MAX_VALUE); }
             @Override public void onNext(V item) { itemConsumer.exec(item); }
             @Override public void onError(E error) { faultConsumer.exec(error); }
@@ -352,6 +350,7 @@ public interface Publishable<V, E extends Exception> extends SubscribeSupport<V,
                 try { faultConsumer.exec((E) error); }
                 catch (ClassCastException e) { errorConsumer.exec(error); } }
             @Override public void onComplete() { completeConsumer.exec(); }
+            @Override public Context currentContext() { return context; }
         };
     }
 
